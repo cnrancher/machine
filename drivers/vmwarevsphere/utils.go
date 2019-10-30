@@ -144,7 +144,7 @@ func (d *Driver) restLogin(ctx context.Context, c *vim25.Client) (*library.Manag
 }
 
 func (d *Driver) getVappConfig() *types.VmConfigSpec {
-	if d.VAppTransport != "com.vmware.guestInfo" || d.VAppTransport != "iso" {
+	if d.VAppTransport != "com.vmware.guestInfo" && d.VAppTransport != "iso" {
 		return nil
 	}
 

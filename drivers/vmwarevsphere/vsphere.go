@@ -30,7 +30,7 @@ const (
 	isoFilename    = "boot2docker.iso"
 	// B2DUser is the guest User for
 	// tools login
-	B2DUser = "docker"
+	B2DUser = "rancher"
 	// B2DPass is the guest Pass for tools login
 	B2DPass      = "tcuser"
 	B2DUserGroup = "staff"
