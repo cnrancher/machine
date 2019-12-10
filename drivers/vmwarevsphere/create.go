@@ -3,6 +3,7 @@ package vmwarevsphere
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/docker/machine/libmachine/log"
 	"github.com/vmware/govmomi/find"
@@ -222,6 +223,28 @@ func (d *Driver) createFromVmName() error {
 	vm2Clone, err := d.fetchVM(d.CloneFrom)
 	if err != nil {
 		return err
+	}
+
+	devices, err := vm2Clone.Device(d.getCtx())
+	if err != nil {
+		return err
+	}
+
+	for _, dev := range devices {
+		switch devices.Type(dev) {
+		case "disk":
+			// Change disk 1 size
+			if strings.Contains(dev.GetVirtualDevice().DeviceInfo.GetDescription().Label, "1") {
+				disk := dev.(*types.VirtualDisk)
+				disk.CapacityInKB = int64(d.DiskSize) * 1024
+				// err := vm.EditDevice(d.getCtx(), disk)
+				diskSpec := &types.VirtualDeviceConfigSpec{
+					Operation: types.VirtualDeviceConfigSpecOperationEdit,
+					Device:    disk,
+				}
+				spec.Config.DeviceChange = []types.BaseVirtualDeviceConfigSpec{diskSpec}
+			}
+		}
 	}
 
 	folders, err := d.datacenter.Folders(d.getCtx())
