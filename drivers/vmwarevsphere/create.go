@@ -252,7 +252,15 @@ func (d *Driver) createFromVmName() error {
 		return err
 	}
 
-	task, err := vm2Clone.Clone(d.getCtx(), folders.VmFolder, d.MachineName, spec)
+	folder := folders.VmFolder
+	if d.Folder != "" {
+		folder, err = d.finder.Folder(d.getCtx(), fmt.Sprintf("%s/%s", folders.VmFolder.InventoryPath, d.Folder))
+		if err != nil {
+			return err
+		}
+	}
+
+	task, err := vm2Clone.Clone(d.getCtx(), folder, d.MachineName, spec)
 	if err != nil {
 		return err
 	}
