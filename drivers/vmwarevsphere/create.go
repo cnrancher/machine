@@ -200,11 +200,6 @@ func (d *Driver) createFromVmName() error {
 		return err
 	}
 
-	dss, err := d.finder.DatastoreOrDefault(d.getCtx(), d.Datastore)
-	if err != nil {
-		return err
-	}
-
 	var info *types.TaskInfo
 	ref := d.resourcepool.Reference()
 	spec := types.VirtualMachineCloneSpec{
@@ -213,12 +208,23 @@ func (d *Driver) createFromVmName() error {
 		},
 		Config: &types.VirtualMachineConfigSpec{
 			GuestId:    "otherLinux64Guest",
-			Files:      &types.VirtualMachineFileInfo{VmPathName: fmt.Sprintf("[%s]", dss.Name())},
 			NumCPUs:    int32(d.CPU),
 			MemoryMB:   int64(d.Memory),
 			VAppConfig: d.getVappConfig(),
 		},
 	}
+
+	ds, err := d.getDatastore(spec.Config)
+	if err != nil {
+		return err
+	}
+
+	spec.Config.Files = &types.VirtualMachineFileInfo{
+		VmPathName: fmt.Sprintf("[%s]", ds.Name()),
+	}
+
+	dsref := ds.Reference()
+	spec.Location.Datastore = &dsref
 
 	vm2Clone, err := d.fetchVM(d.CloneFrom)
 	if err != nil {
@@ -237,7 +243,6 @@ func (d *Driver) createFromVmName() error {
 			if strings.Contains(dev.GetVirtualDevice().DeviceInfo.GetDescription().Label, "1") {
 				disk := dev.(*types.VirtualDisk)
 				disk.CapacityInKB = int64(d.DiskSize) * 1024
-				// err := vm.EditDevice(d.getCtx(), disk)
 				diskSpec := &types.VirtualDeviceConfigSpec{
 					Operation: types.VirtualDeviceConfigSpecOperationEdit,
 					Device:    disk,
